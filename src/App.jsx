@@ -88,11 +88,7 @@ export class App extends Component {
           </button>
         )}
         {largeImageURL && (
-          <Modal
-            largeImageURL={largeImageURL}
-            // closeImage={this.closeImage}
-            closeOnEscape={this.closeOnEscape}
-          />
+          <Modal largeImageURL={largeImageURL} closeModal={this.closeModal} />
         )}
       </div>
     );
