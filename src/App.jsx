@@ -2,6 +2,7 @@ import css from './App.module.css';
 import React, { Component } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import API from './API';
 import Searchbar from './components/Searchbar/Searchbar';
 import ImageGallery from './components/ImageGallery/ImageGallery';
 import Loader from './components/Loader/Loader';
@@ -13,57 +14,43 @@ export class App extends Component {
     search: '',
     images: [],
     status: 'idle',
-    error: null,
     page: 1,
     largeImageURL: null,
     message: '',
+    totalImages: 0,
   };
 
-  static API_KEY = '32832453-e3254b3d4cedd40db7f429e0f';
-
-  async componentDidUpdate(prevProps, prevState) {
+  async componentDidUpdate(_, prevState) {
     const { search, page } = this.state;
     if (prevState.search !== search || prevState.page !== page) {
+      const api = new API();
+      api.query = search;
+      api.page = page;
+
       try {
         this.setState({ status: 'pending' });
 
-        const searchParams = new URLSearchParams({
-          q: this.state.search,
-          page: this.state.page,
-          key: App.API_KEY,
-          image_type: 'photo',
-          orientation: 'horizontal',
-          per_page: 12,
-        });
-
-        const imagesPre = await fetch(
-          `https://pixabay.com/api/?${searchParams}`
-        );
+        const imagesPre = await api.getPhotos();
 
         if (imagesPre.ok) {
           const imagesObj = await imagesPre.json();
           const images = imagesObj.hits;
-          if (images.length === 12) {
-            this.setState(prevState => ({
-              images: [...prevState.images, ...images],
-              status: 'resolved',
-            }));
-          } else if (images.length > 0 && images.length < 12) {
-            this.setState(prevState => ({
-              images: [...prevState.images, ...images],
-              message: '',
-              status: 'rejected',
-            }));
-          } else {
+          if (!images.length) {
             this.setState({
-              message: 'Nothing found',
               status: 'rejected',
+              message: 'Nothing found',
             });
+            return;
           }
+          this.setState(prevState => ({
+            images: [...prevState.images, ...images],
+            status: 'resolved',
+            totalImages: imagesObj.totalHits,
+          }));
         }
       } catch (error) {
         console.log(error);
-        this.setState({ error, status: 'rejected' });
+        this.setState({ message: error, status: 'rejected' });
       }
     }
   }
@@ -87,15 +74,19 @@ export class App extends Component {
   };
 
   render() {
-    const { images, status, largeImageURL, message } = this.state;
+    const { images, status, largeImageURL, message, totalImages } = this.state;
     return (
       <div className={css.App}>
         <ToastContainer />
         <Searchbar handleSubmit={this.handleSubmit} />
         <ImageGallery array={images} getLargeImage={this.getLargeImage} />
         {status === 'pending' && <Loader />}
-        {status === 'rejected' && <p>{message}</p>}
-        {status === 'resolved' && <Button loadMore={this.loadMore} />}
+        {status === 'rejected' && (
+          <p style={{ textAlign: 'center' }}>{message}</p>
+        )}
+        {status === 'resolved' && images.length !== totalImages && (
+          <Button loadMore={this.loadMore} />
+        )}
         {largeImageURL && (
           <Modal largeImageURL={largeImageURL} closeModal={this.closeModal} />
         )}
