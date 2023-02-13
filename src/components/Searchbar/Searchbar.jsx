@@ -47,6 +47,7 @@ class Searchbar extends Component {
             name="search"
             value={this.state.search}
             onChange={this.handleChange}
+            disabled={this.props.disabled}
           />
         </form>
       </header>
@@ -56,6 +57,7 @@ class Searchbar extends Component {
 
 Searchbar.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
+  disabled: PropTypes.bool.isRequired,
 };
 
 export default Searchbar;

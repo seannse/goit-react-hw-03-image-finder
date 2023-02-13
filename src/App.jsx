@@ -18,6 +18,7 @@ export class App extends Component {
     largeImageURL: null,
     message: '',
     totalImages: 0,
+    disabled: false,
   };
 
   async componentDidUpdate(_, prevState) {
@@ -28,7 +29,7 @@ export class App extends Component {
       api.page = page;
 
       try {
-        this.setState({ status: 'pending' });
+        this.setState({ status: 'pending', disabled: true });
 
         const imagesPre = await api.getPhotos();
 
@@ -49,8 +50,9 @@ export class App extends Component {
           }));
         }
       } catch (error) {
-        console.log(error);
         this.setState({ message: error, status: 'rejected' });
+      } finally {
+        this.setState({ disabled: false });
       }
     }
   }
@@ -74,18 +76,19 @@ export class App extends Component {
   };
 
   render() {
-    const { images, status, largeImageURL, message, totalImages } = this.state;
+    const { images, status, largeImageURL, message, totalImages, disabled } =
+      this.state;
     return (
       <div className={css.App}>
         <ToastContainer />
-        <Searchbar handleSubmit={this.handleSubmit} />
+        <Searchbar handleSubmit={this.handleSubmit} disabled={disabled} />
         <ImageGallery array={images} getLargeImage={this.getLargeImage} />
         {status === 'pending' && <Loader />}
         {status === 'rejected' && (
           <p style={{ textAlign: 'center' }}>{message}</p>
         )}
         {status === 'resolved' && images.length !== totalImages && (
-          <Button loadMore={this.loadMore} />
+          <Button loadMore={this.loadMore} disabled={disabled} />
         )}
         {largeImageURL && (
           <Modal largeImageURL={largeImageURL} closeModal={this.closeModal} />
