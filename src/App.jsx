@@ -6,6 +6,7 @@ import Searchbar from './components/Searchbar/Searchbar';
 import ImageGallery from './components/ImageGallery/ImageGallery';
 import Loader from './components/Loader/Loader';
 import Modal from './components/Modal/Modal';
+import Button from './components/Button/Button';
 
 export class App extends Component {
   state = {
@@ -15,6 +16,7 @@ export class App extends Component {
     error: null,
     page: 1,
     largeImageURL: null,
+    message: '',
   };
 
   static API_KEY = '32832453-e3254b3d4cedd40db7f429e0f';
@@ -41,12 +43,23 @@ export class App extends Component {
         if (imagesPre.ok) {
           const imagesObj = await imagesPre.json();
           const images = imagesObj.hits;
-          images.length
-            ? this.setState(prevState => ({
-                images: [...prevState.images, ...images],
-                status: 'resolved',
-              }))
-            : this.setState({ status: 'rejected' });
+          if (images.length === 12) {
+            this.setState(prevState => ({
+              images: [...prevState.images, ...images],
+              status: 'resolved',
+            }));
+          } else if (images.length > 0 && images.length < 12) {
+            this.setState(prevState => ({
+              images: [...prevState.images, ...images],
+              message: '',
+              status: 'rejected',
+            }));
+          } else {
+            this.setState({
+              message: 'Nothing found',
+              status: 'rejected',
+            });
+          }
         }
       } catch (error) {
         console.log(error);
@@ -74,19 +87,15 @@ export class App extends Component {
   };
 
   render() {
-    const { images, status, largeImageURL } = this.state;
+    const { images, status, largeImageURL, message } = this.state;
     return (
       <div className={css.App}>
         <ToastContainer />
         <Searchbar handleSubmit={this.handleSubmit} />
         <ImageGallery array={images} getLargeImage={this.getLargeImage} />
         {status === 'pending' && <Loader />}
-        {status === 'rejected' && <p>Nothing found</p>}
-        {status === 'resolved' && images.length && (
-          <button className={css.Button} type="button" onClick={this.loadMore}>
-            Load More
-          </button>
-        )}
+        {status === 'rejected' && <p>{message}</p>}
+        {status === 'resolved' && <Button loadMore={this.loadMore} />}
         {largeImageURL && (
           <Modal largeImageURL={largeImageURL} closeModal={this.closeModal} />
         )}

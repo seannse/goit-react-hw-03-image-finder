@@ -14,6 +14,7 @@ class Searchbar extends Component {
 
     if (!this.state.search.trim()) {
       toast.error('Enter valid search query');
+      this.setState({ search: '' });
       return;
     }
     this.props.handleSubmit(this.state.search);
