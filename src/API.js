@@ -18,7 +18,11 @@ export class API {
       per_page: this.per_page,
     });
 
-    return await fetch(`https://pixabay.com/api/?${searchParams}`);
+    const res = await fetch(`https://pixabay.com/api/?${searchParams}`);
+    if (!res.ok) {
+      return Promise.reject(new Error('Not found'));
+    }
+    return await res.json();
   }
 }
 

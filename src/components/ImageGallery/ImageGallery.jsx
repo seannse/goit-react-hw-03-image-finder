@@ -1,21 +1,18 @@
 import css from './ImageGallery.module.css';
 import PropTypes from 'prop-types';
+import ImageGalleryItem from 'components/ImageGalleryItem/ImageGalleryItem';
 
 function ImageGallery({ array, getLargeImage }) {
   return (
     <ul className={css.ImageGallery}>
       {array.map(({ id, tags, largeImageURL, webformatURL }) => (
-        <li
+        <ImageGalleryItem
           key={id}
-          onClick={() => getLargeImage(largeImageURL)}
-          className={css.ImageGalleryItem}
-        >
-          <img
-            src={webformatURL}
-            alt={tags}
-            className={css.ImageGalleryItem_image}
-          />
-        </li>
+          getLargeImage={getLargeImage}
+          largeImageURL={largeImageURL}
+          webformatURL={webformatURL}
+          tags={tags}
+        />
       ))}
     </ul>
   );
@@ -23,6 +20,7 @@ function ImageGallery({ array, getLargeImage }) {
 
 ImageGallery.propTypes = {
   array: PropTypes.arrayOf(PropTypes.object).isRequired,
+  getLargeImage: PropTypes.func.isRequired,
 };
 
 export default ImageGallery;

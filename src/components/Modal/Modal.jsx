@@ -2,16 +2,6 @@ import { Component } from 'react';
 import PropTypes from 'prop-types';
 import css from './Modal.module.css';
 class Modal extends Component {
-  onEscClose = e => {
-    if (e.code === 'Escape') this.props.closeOnEscape();
-  };
-
-  closeImage = e => {
-    if (e.target === e.currentTarget) {
-      this.props.closeOnEscape();
-    }
-  };
-
   componentDidMount() {
     window.addEventListener('keydown', this.onEscClose);
   }
@@ -19,6 +9,16 @@ class Modal extends Component {
   componentWillUnmount() {
     window.removeEventListener('keydown', this.onEscClose);
   }
+
+  onEscClose = e => {
+    if (e.code === 'Escape') this.props.closeModal();
+  };
+
+  closeImage = e => {
+    if (e.target === e.currentTarget) {
+      this.props.closeModal();
+    }
+  };
 
   render() {
     const { largeImageURL } = this.props;
@@ -31,6 +31,7 @@ class Modal extends Component {
     );
   }
 }
+
 Modal.propTypes = {
   closeModal: PropTypes.func.isRequired,
   largeImageURL: PropTypes.string.isRequired,

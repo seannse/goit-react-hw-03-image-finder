@@ -9,6 +9,8 @@ import Loader from './components/Loader/Loader';
 import Modal from './components/Modal/Modal';
 import Button from './components/Button/Button';
 
+const api = new API();
+
 export class App extends Component {
   state = {
     search: '',
@@ -24,33 +26,29 @@ export class App extends Component {
   async componentDidUpdate(_, prevState) {
     const { search, page } = this.state;
     if (prevState.search !== search || prevState.page !== page) {
-      const api = new API();
-      api.query = search;
-      api.page = page;
-
       try {
         this.setState({ status: 'pending', disabled: true });
 
-        const imagesPre = await api.getPhotos();
+        api.query = search;
+        api.page = page;
+        const imagesObj = await api.getPhotos();
+        const images = imagesObj.hits;
 
-        if (imagesPre.ok) {
-          const imagesObj = await imagesPre.json();
-          const images = imagesObj.hits;
-          if (!images.length) {
-            this.setState({
-              status: 'rejected',
-              message: 'Nothing found',
-            });
-            return;
-          }
-          this.setState(prevState => ({
-            images: [...prevState.images, ...images],
-            status: 'resolved',
-            totalImages: imagesObj.totalHits,
-          }));
+        if (!images.length) {
+          this.setState({
+            status: 'rejected',
+            message: 'Nothing found',
+          });
+          return;
         }
+
+        this.setState(prevState => ({
+          images: [...prevState.images, ...images],
+          status: 'resolved',
+          totalImages: imagesObj.totalHits,
+        }));
       } catch (error) {
-        this.setState({ message: error, status: 'rejected' });
+        this.setState({ message: error.message, status: 'rejected' });
       } finally {
         this.setState({ disabled: false });
       }
@@ -64,7 +62,7 @@ export class App extends Component {
   };
 
   handleSubmit = value => {
-    this.setState({ search: value, images: [], page: 1 });
+    this.setState({ search: value, images: [], page: 1, totalImages: 0 });
   };
 
   getLargeImage = largeImageURL => {
@@ -82,13 +80,15 @@ export class App extends Component {
       <div className={css.App}>
         <ToastContainer />
         <Searchbar handleSubmit={this.handleSubmit} disabled={disabled} />
-        <ImageGallery array={images} getLargeImage={this.getLargeImage} />
+        {images.length !== 0 && (
+          <ImageGallery array={images} getLargeImage={this.getLargeImage} />
+        )}
         {status === 'pending' && <Loader />}
         {status === 'rejected' && (
           <p style={{ textAlign: 'center' }}>{message}</p>
         )}
         {status === 'resolved' && images.length !== totalImages && (
-          <Button loadMore={this.loadMore} disabled={disabled} />
+          <Button loadMore={this.loadMore} />
         )}
         {largeImageURL && (
           <Modal largeImageURL={largeImageURL} closeModal={this.closeModal} />
